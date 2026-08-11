@@ -19,7 +19,9 @@ RUN chmod +x /metrics/source/app/action/index.mjs \
   && apt-get install -y curl unzip \
   && curl -fsSL https://deno.land/x/install/install.sh | DENO_INSTALL=/usr/local sh \
   # Install ruby to support github licensed gem
-  && apt-get install -y ruby-full git g++ cmake pkg-config libssl-dev \
+  # xz-utils is required by mini_portile2, which builds libxml2 from a .tar.xz
+  # while compiling nokogiri; without xzcat the gem install fails
+  && apt-get install -y ruby-full git g++ cmake pkg-config libssl-dev xz-utils \
   && gem install licensed \
   # Install python for node-gyp
   && apt-get install -y python3 \
