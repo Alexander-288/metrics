@@ -42,14 +42,37 @@ export default async function({login, data, rest, imports, q, account}, {enabled
     console.debug(`metrics/compute/${login}/plugins > habits > filtered out ${commits.length} push events over last ${days} days`)
     habits.commits.fetched = commits.length
 
+    //Resolve pushed commits
+    //GitHub no longer includes `commits` in PushEvent payloads (they now only carry
+    //`repository_id`, `push_id`, `ref`, `head` and `before`), so the commit list is
+    //resolved from the pushed range instead. Legacy payloads are still honoured.
+    console.debug(`metrics/compute/${login}/plugins > habits > resolving pushed commits`)
+    const pushed = [
+      ...await Promise.allSettled(
+        commits.map(async ({repo: {name}, payload}) => {
+          const [owner, repo] = name.split("/")
+          if (Array.isArray(payload?.commits))
+            return payload.commits.map(({sha, author}) => ({owner, repo, sha, author}))
+          const {before, head} = payload ?? {}
+          //An all-zero `before` is a newly created branch, which has no range to compare
+          if ((!before) || (!head) || (/^0+$/.test(before)))
+            return []
+          const {data: {commits: range = []}} = await rest.request("GET /repos/{owner}/{repo}/compare/{basehead}", {owner, repo, basehead: `${before}...${head}`})
+          return range.map(({sha, author, commit}) => ({owner, repo, sha, author: {login: author?.login, email: commit?.author?.email, name: commit?.author?.name}}))
+        }),
+      ),
+    ]
+      .filter(({status}) => status === "fulfilled")
+      .flatMap(({value}) => value)
+    console.debug(`metrics/compute/${login}/plugins > habits > resolved ${pushed.length} commits from ${commits.length} push events`)
+
     //Retrieve edited files and filter edited lines (those starting with +/-) from patches
     console.debug(`metrics/compute/${login}/plugins > habits > loading patches`)
     const patches = [
       ...await Promise.allSettled(
-        commits
-          .flatMap(({payload}) => payload.commits)
+        pushed
           .filter(({author}) => data.shared["commits.authoring"].filter(authoring => author?.login?.toLocaleLowerCase().includes(authoring) || author?.email?.toLocaleLowerCase().includes(authoring) || author?.name?.toLocaleLowerCase().includes(authoring)).length)
-          .map(async commit => (await rest.request(commit)).data.files),
+          .map(async ({owner, repo, sha}) => (await rest.request("GET /repos/{owner}/{repo}/commits/{ref}", {owner, repo, ref: sha})).data.files),
       ),
     ]
       .filter(({status}) => status === "fulfilled")
