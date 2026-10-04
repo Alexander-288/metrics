@@ -479,6 +479,10 @@ inputs:
     description: Charts display type
     default: <default-value>
 
+  plugin_habits_charts_sections:
+    description: Displayed charts
+    default: <default-value>
+
   plugin_habits_trim:
     description: Trim unused hours on charts
     default: <default-value>
@@ -1110,6 +1114,10 @@ inputs:
     description: Display mode
     default: <default-value>
 
+  plugin_music_tracks:
+    description: Hardcoded tracks for manual mode
+    default: <default-value>
+
   plugin_music_playlist:
     description: Playlist URL
     default: <default-value>
@@ -1575,10 +1583,11 @@ runs:
             echo "Using an unreleased version ($METRICS_VERSION)"
             METRICS_IMAGE=metrics:$METRICS_VERSION
           fi
-        # Forked action
+        # Forked action: use the image published by the profile-image workflow
         else
           echo "Using a forked version"
-          METRICS_IMAGE=metrics:forked-$METRICS_VERSION
+          METRICS_IMAGE=ghcr.io/alexander-288/metrics:profile
+          docker image pull $METRICS_IMAGE
         fi
         echo "Image name: $METRICS_IMAGE"
 
