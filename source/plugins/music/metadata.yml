@@ -71,6 +71,7 @@ inputs:
       - `playlist`: display random tracks from an URL playlist
       - `recent`: display recently listened tracks
       - `top`: display top listened artists/tracks
+      - `manual`: display the tracks listed in `plugin_music_tracks`
 
       If [`plugin_music_playlist`](/source/plugins/music/README.md#plugin_music_playlist) is specified, the default value is `playlist`, else it is `recent`
     type: string
@@ -79,6 +80,15 @@ inputs:
       - playlist
       - recent
       - top
+      - manual
+
+  plugin_music_tracks:
+    description: |
+      Hardcoded tracks for `manual` mode, one `Title - Artist` per line
+    type: string
+    default: ""
+    example: Mutter - Rammstein
+    preset: no
 
   plugin_music_playlist:
     description: |

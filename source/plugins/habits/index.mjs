@@ -10,12 +10,12 @@ export default async function({login, data, rest, imports, q, account}, {enabled
       return null
 
     //Load inputs
-    let {from, days, facts, charts, "charts.type": _charts, trim, "languages.limit": limit, "languages.threshold": threshold, skipped = []} = imports.metadata.plugins.habits.inputs({data, account, q}, defaults)
+    let {from, days, facts, charts, "charts.type": _charts, "charts.sections": sections, trim, "languages.limit": limit, "languages.threshold": threshold, skipped = []} = imports.metadata.plugins.habits.inputs({data, account, q}, defaults)
     threshold = (Number(threshold.replace(/%$/, "")) || 0) / 100
     skipped.push(...data.shared["repositories.skipped"])
 
     //Initialization
-    const habits = {facts, charts, trim, lines: {average: {chars: 0}}, commits: {fetched: 0, hour: NaN, hours: {}, day: NaN, days: {}}, indents: {style: "", spaces: 0, tabs: 0}, linguist: {available: false, ordered: [], languages: {}}}
+    const habits = {facts, charts, sections, trim, lines: {average: {chars: 0}}, commits: {fetched: 0, hour: NaN, hours: {}, day: NaN, days: {}}, indents: {style: "", spaces: 0, tabs: 0}, linguist: {available: false, ordered: [], languages: {}}}
     const pages = Math.ceil(from / 100)
     const offset = data.config.timezone?.offset ?? 0
 

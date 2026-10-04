@@ -25,6 +25,7 @@ const modes = {
   playlist: "Suggested tracks",
   recent: "Recently played",
   top: "Top played",
+  manual: "Suggested tracks",
 }
 
 //Setup
@@ -47,7 +48,7 @@ export default async function({login, imports, data, q, account}, {enabled = fal
     let tracks = null
 
     //Load inputs
-    let {provider, mode, playlist, limit, user, "played.at": played_at, "time.range": time_range, "top.type": top_type, token: _token} = imports.metadata.plugins.music.inputs({data, account, q})
+    let {provider, mode, playlist, tracks: manual = "", limit, user, "played.at": played_at, "time.range": time_range, "top.type": top_type, token: _token} = imports.metadata.plugins.music.inputs({data, account, q})
     if ((sandbox) && (_token)) {
       token = _token
       console.debug(`metrics/compute/${login}/plugins > music > overridden token value through user inputs as sandbox mode is enabled`)
@@ -71,8 +72,8 @@ export default async function({login, imports, data, q, account}, {enabled = fal
       else
         mode = "recent"
     }
-    //Provider
-    if (!(provider in providers))
+    //Provider (manual mode needs none)
+    if ((mode !== "manual") && (!(provider in providers)))
       throw {error: {message: provider ? `Unsupported provider "${provider}"` : "Provider is not set"}, ...raw}
     //Mode
     if (!(mode in modes))
@@ -90,6 +91,25 @@ export default async function({login, imports, data, q, account}, {enabled = fal
     //Handle mode
     console.debug(`metrics/compute/${login}/plugins > music > processing mode ${mode} with provider ${provider}`)
     switch (mode) {
+      //Hardcoded tracks, artwork looked up on the public iTunes search API
+      case "manual": {
+        tracks = []
+        for (const line of manual.split("\n").map(line => line.trim()).filter(line => line)) {
+          const [name, ...rest] = line.split(" - ")
+          const artist = rest.join(" - ").trim()
+          let artwork = ""
+          try {
+            const url = `https://itunes.apple.com/search?entity=song&limit=1&term=${encodeURIComponent(`${name} ${artist}`)}`
+            const {results: [found] = []} = await fetch(url).then(response => response.json())
+            artwork = found?.artworkUrl100 ?? ""
+          }
+          catch (error) {
+            console.debug(`metrics/compute/${login}/plugins > music > no artwork for ${line}: ${error}`)
+          }
+          tracks.push({name: name.trim(), artist, artwork})
+        }
+        break
+      }
       //Playlist mode
       case "playlist": {
         //Start puppeteer and navigate to playlist

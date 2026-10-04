@@ -38,7 +38,7 @@
 
   <% if (plugins.habits.charts) { %>
     <section class="habits">
-      <% if (!Number.isNaN(plugins.habits.commits.hour)) { %>
+      <% if ((plugins.habits.sections?.includes("hours") ?? true) && (!Number.isNaN(plugins.habits.commits.hour))) { %>
         <div class="column chart largeable">
           <h3>Commit activity per hour of day</h3>
           <% if (Array.isArray(plugins.habits.charts)) { %>
@@ -68,7 +68,7 @@
       <% } %>
 
       <div class="row largeable">
-        <% if (!Number.isNaN(plugins.habits.commits.day)) { %>
+        <% if ((plugins.habits.sections?.includes("days") ?? true) && (!Number.isNaN(plugins.habits.commits.day))) { %>
           <section class="column chart">
             <h3>Commit activity per day of week</h3>
             <% if (Array.isArray(plugins.habits.charts)) { %>
@@ -88,7 +88,7 @@
             <% } %>
           </section>
         <% } %>
-        <% if (plugins.habits.linguist.available) { %>
+        <% if ((plugins.habits.sections?.includes("languages") ?? true) && (plugins.habits.linguist.available)) { %>
           <section class="column chart">
             <h3>Language activity</h3>
             <% if (Array.isArray(plugins.habits.charts)) { %>
