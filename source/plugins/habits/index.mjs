@@ -122,8 +122,8 @@ export default async function({login, data, rest, imports, q, account}, {enabled
       habits.lines.average.chars = lines.reduce((a, b) => a + b, 0) / lines.length
     }
 
-    //Linguist
-    if ((charts) && (imports.metadata.plugins.habits.extras("charts", {extras, error: false}))) {
+    //Linguist (skipped when the languages chart is not displayed)
+    if ((charts) && (sections.includes("languages")) && (imports.metadata.plugins.habits.extras("charts", {extras, error: false}))) {
       //Check if linguist exists
       console.debug(`metrics/compute/${login}/plugins > habits > searching recently used languages using linguist`)
       if (patches.length) {
